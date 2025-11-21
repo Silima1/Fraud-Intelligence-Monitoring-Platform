@@ -10,5 +10,3 @@ plotly
 altair
 datetime
 hashlib
-io
-base64
