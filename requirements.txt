@@ -1,6 +1,14 @@
+imbalanced-learn
 streamlit
 pandas
 numpy
 scikit-learn
 matplotlib
+seaborn
 joblib
+plotly
+altair
+datetime
+hashlib
+io
+base64
