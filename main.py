@@ -70,12 +70,6 @@ def initialize_session_state():
         st.session_state.model = None
 
 # =============================================================================
-# DATA AND MODEL LOADING
-# =============================================================================
-
-<<<<<<< HEAD
-=======
-# =============================================================================
 # DATA VALIDATION FUNCTIONS
 # =============================================================================
 
@@ -93,27 +87,20 @@ def validate_dataframe(df):
 # DATA AND MODEL LOADING
 # =============================================================================
 
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
 def load_kaggle_data():
     """Load and process the Kaggle dataset"""
     try:
         file_paths = [
             "rf_kaggle.csv",
-<<<<<<< HEAD
-            "./rf_kaggle.csv",
-=======
             "./rf_kaggle.csv", 
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
-            "source/rf_kaggle.csv"
+            "source/rf_kaggle.csv",
+            "/mount/src/fraud-intelligence-monitoring-platform/rf_kaggle.csv"
         ]
         
         for path in file_paths:
             if os.path.exists(path):
                 df = pd.read_csv(path)
-<<<<<<< HEAD
-=======
-                df = validate_dataframe(df)  # CHAMA A VALIDAÇÃO AQUI
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
+                df = validate_dataframe(df)
                 st.session_state.kaggle_data = df
                 return df
         
@@ -153,7 +140,8 @@ def load_model():
         model_paths = [
             "rf_kaggle.joblib",
             "./rf_kaggle.joblib",
-            "source/rf_kaggle.joblib"
+            "source/rf_kaggle.joblib",
+            "/mount/src/fraud-intelligence-monitoring-platform/rf_kaggle.joblib"
         ]
         
         for path in model_paths:
@@ -529,10 +517,7 @@ class ApplicationAnalyzer:
 # =============================================================================
 # DASHBOARD COMPONENTS
 # =============================================================================
-<<<<<<< HEAD
 
-=======
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
 def render_dashboard():
     """Render the main dashboard with real data"""
     st.markdown("<h2>📊 Dashboard Overview</h2>", unsafe_allow_html=True)
@@ -540,11 +525,7 @@ def render_dashboard():
     # Load data
     df = st.session_state.kaggle_data
     
-<<<<<<< HEAD
-    # Key Metrics
-=======
     # Key Metrics with safety checks
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
@@ -552,34 +533,27 @@ def render_dashboard():
         st.metric("Total Applications", f"{total_apps:,}")
     
     with col2:
-<<<<<<< HEAD
-        approval_rate = len(df[df['status'] == 'approved']) / len(df) * 100
-        st.metric("Approval Rate", f"{approval_rate:.1f}%")
-    
-    with col3:
-        fraud_rate = df['fraud_flag'].mean() * 100
-        st.metric("Fraud Detection Rate", f"{fraud_rate:.1f}%")
-    
-    with col4:
-        avg_processing = 2.3  # This would come from real data
-=======
-        if 'status' in df.columns:
-            approved_count = len(df[df['status'] == 'approved']) if 'approved' in df['status'].values else len(df[df['risk_score'] < 0.3])
-            approval_rate = approved_count / len(df) * 100
-        else:
+        # Safe approval rate calculation
+        if 'status' in df.columns and 'approved' in df['status'].values:
+            approval_rate = len(df[df['status'] == 'approved']) / len(df) * 100
+        elif 'risk_score' in df.columns:
             approval_rate = len(df[df['risk_score'] < 0.3]) / len(df) * 100
+        else:
+            approval_rate = 68.0  # Default value
         st.metric("Approval Rate", f"{approval_rate:.1f}%")
     
     with col3:
+        # Safe fraud rate calculation
         if 'fraud_flag' in df.columns:
             fraud_rate = df['fraud_flag'].mean() * 100
-        else:
+        elif 'risk_score' in df.columns:
             fraud_rate = len(df[df['risk_score'] > 0.7]) / len(df) * 100
+        else:
+            fraud_rate = 15.0  # Default value
         st.metric("Fraud Detection Rate", f"{fraud_rate:.1f}%")
     
     with col4:
         avg_processing = 2.3
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
         st.metric("Avg Processing Time", f"{avg_processing} days")
     
     # Charts Row 1
@@ -587,139 +561,6 @@ def render_dashboard():
     
     with col1:
         st.subheader("Application Status Distribution")
-<<<<<<< HEAD
-        status_counts = df['status'].value_counts()
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.pie(status_counts.values, labels=status_counts.index, autopct='%1.1f%%', startangle=90)
-        ax.axis('equal')
-        st.pyplot(fig)
-    
-    with col2:
-        st.subheader("Risk Score Distribution")
-        fig, ax = plt.subplots(figsize=(8, 6))
-        ax.hist(df['risk_score'], bins=20, alpha=0.7, color='skyblue', edgecolor='black')
-        ax.set_xlabel('Risk Score')
-        ax.set_ylabel('Frequency')
-        ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
-    
-    # Charts Row 2
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("Loan Amount vs Risk Score")
-        fig, ax = plt.subplots(figsize=(8, 6))
-        scatter = ax.scatter(df['loan_amount'], df['risk_score'], c=df['fraud_flag'], 
-                           alpha=0.6, cmap='coolwarm')
-        ax.set_xlabel('Loan Amount')
-        ax.set_ylabel('Risk Score')
-        ax.grid(True, alpha=0.3)
-        st.pyplot(fig)
-    
-    with col2:
-        st.subheader("Monthly Applications")
-        monthly_data = df.groupby(df['application_date'].dt.to_period('M')).size()
-        fig, ax = plt.subplots(figsize=(8, 6))
-        monthly_data.plot(kind='line', ax=ax, marker='o')
-        ax.set_xlabel('Month')
-        ax.set_ylabel('Number of Applications')
-        ax.grid(True, alpha=0.3)
-        plt.xticks(rotation=45)
-        st.pyplot(fig)
-    
-    # Recent Applications Table
-    st.subheader("Recent Applications")
-    recent_apps = df.tail(10)[['application_date', 'age', 'income', 'loan_amount', 'risk_score', 'status']]
-    st.dataframe(recent_apps, use_container_width=True)
-
-# =============================================================================
-# APPLICATION LOOKUP COMPONENT
-# =============================================================================
-
-def render_application_lookup():
-    """Render application lookup interface"""
-    st.markdown("<h2>🔍 Application Lookup</h2>", unsafe_allow_html=True)
-    
-    df = st.session_state.kaggle_data
-    
-    # Search filters
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        search_term = st.text_input("Search by ID or Name")
-    
-    with col2:
-        status_filter = st.selectbox("Status Filter", ["All", "approved", "rejected", "under_review"])
-    
-    with col3:
-        risk_threshold = st.slider("Risk Score Threshold", 0.0, 1.0, 0.5)
-    
-    # Filter data
-    filtered_df = df.copy()
-    
-    if search_term:
-        filtered_df = filtered_df[filtered_df.apply(lambda row: search_term.lower() in str(row).lower(), axis=1)]
-    
-    if status_filter != "All":
-        filtered_df = filtered_df[filtered_df['status'] == status_filter]
-    
-    filtered_df = filtered_df[filtered_df['risk_score'] >= risk_threshold]
-    
-    # Display results
-    st.subheader(f"Found {len(filtered_df)} Applications")
-    
-    if len(filtered_df) > 0:
-        # Select columns to display
-        display_columns = ['application_date', 'age', 'income', 'loan_amount', 'credit_score', 'risk_score', 'status']
-        display_df = filtered_df[display_columns].head(50)  # Limit display
-        
-        st.dataframe(display_df, use_container_width=True)
-        
-        # Export options
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📊 Export to CSV"):
-                csv = display_df.to_csv(index=False)
-                st.download_button(
-                    label="Download CSV",
-                    data=csv,
-                    file_name="applications_export.csv",
-                    mime="text/csv"
-                )
-        
-        with col2:
-            if st.button("📈 Show Statistics"):
-                st.subheader("Dataset Statistics")
-                st.write(filtered_df[['age', 'income', 'loan_amount', 'risk_score']].describe())
-
-# =============================================================================
-# ANALYTICS COMPONENT
-# =============================================================================
-
-def render_analytics():
-    """Render advanced analytics dashboard"""
-    st.markdown("<h2>📈 Analytics & Reports</h2>", unsafe_allow_html=True)
-    
-    df = st.session_state.kaggle_data
-    
-    # Filters
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        date_range = st.date_input(
-            "Date Range",
-            [df['application_date'].min(), df['application_date'].max()]
-        )
-    
-    with col2:
-        loan_range = st.slider(
-            "Loan Amount Range",
-            float(df['loan_amount'].min()),
-            float(df['loan_amount'].max()),
-            (float(df['loan_amount'].min()), float(df['loan_amount'].max()))
-        )
-    
-=======
         if 'status' in df.columns:
             status_counts = df['status'].value_counts()
             fig, ax = plt.subplots(figsize=(8, 6))
@@ -727,7 +568,13 @@ def render_analytics():
             ax.axis('equal')
             st.pyplot(fig)
         else:
-            st.info("Status data not available")
+            st.info("📊 Status data not available - using demo visualization")
+            # Create demo pie chart
+            fig, ax = plt.subplots(figsize=(8, 6))
+            status_data = {'Approved': 60, 'Rejected': 25, 'Under Review': 15}
+            ax.pie(status_data.values(), labels=status_data.keys(), autopct='%1.1f%%', startangle=90)
+            ax.axis('equal')
+            st.pyplot(fig)
     
     with col2:
         st.subheader("Risk Score Distribution")
@@ -739,27 +586,31 @@ def render_analytics():
             ax.grid(True, alpha=0.3)
             st.pyplot(fig)
         else:
-            st.info("Risk score data not available")
+            st.info("📊 Risk score data not available - using demo visualization")
+            # Create demo histogram
+            fig, ax = plt.subplots(figsize=(8, 6))
+            demo_scores = np.random.normal(0.5, 0.2, 1000)
+            demo_scores = np.clip(demo_scores, 0, 1)
+            ax.hist(demo_scores, bins=20, alpha=0.7, color='lightgreen', edgecolor='black')
+            ax.set_xlabel('Risk Score')
+            ax.set_ylabel('Frequency')
+            ax.grid(True, alpha=0.3)
+            st.pyplot(fig)
     
     # Charts Row 2
     col1, col2 = st.columns(2)
     
     with col1:
-        st.subheader("Loan Amount vs Risk Score")
-        if all(col in df.columns for col in ['loan_amount', 'risk_score']):
+        st.subheader("Loan Amount Distribution")
+        if 'loan_amount' in df.columns:
             fig, ax = plt.subplots(figsize=(8, 6))
-            # Check if fraud_flag exists for coloring
-            if 'fraud_flag' in df.columns:
-                scatter = ax.scatter(df['loan_amount'], df['risk_score'], c=df['fraud_flag'], 
-                                   alpha=0.6, cmap='coolwarm')
-            else:
-                scatter = ax.scatter(df['loan_amount'], df['risk_score'], alpha=0.6, color='blue')
-            ax.set_xlabel('Loan Amount')
-            ax.set_ylabel('Risk Score')
+            ax.hist(df['loan_amount'], bins=20, alpha=0.7, color='lightcoral', edgecolor='black')
+            ax.set_xlabel('Loan Amount ($)')
+            ax.set_ylabel('Frequency')
             ax.grid(True, alpha=0.3)
             st.pyplot(fig)
         else:
-            st.info("Loan amount or risk score data not available")
+            st.info("💰 Loan amount data not available")
     
     with col2:
         st.subheader("Monthly Applications")
@@ -776,9 +627,18 @@ def render_analytics():
                 plt.xticks(rotation=45)
                 st.pyplot(fig)
             except Exception as e:
-                st.info("Could not process date data for monthly chart")
+                st.info("📅 Could not process date data for monthly chart")
         else:
-            st.info("Application date data not available")
+            st.info("📅 Application date data not available - using demo trend")
+            # Create demo trend chart
+            fig, ax = plt.subplots(figsize=(8, 6))
+            months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun']
+            applications = [120, 150, 180, 160, 190, 210]
+            ax.plot(months, applications, marker='o')
+            ax.set_xlabel('Month')
+            ax.set_ylabel('Number of Applications')
+            ax.grid(True, alpha=0.3)
+            st.pyplot(fig)
     
     # Recent Applications Table
     st.subheader("Recent Applications")
@@ -804,7 +664,7 @@ def render_analytics():
         st.info("No application data available for display")
     
     # Dataset info for debugging
-    with st.expander("Dataset Information"):
+    with st.expander("🔍 Dataset Information"):
         st.write(f"**Shape:** {df.shape}")
         st.write(f"**Columns:** {list(df.columns)}")
         if len(df) > 0:
@@ -825,13 +685,24 @@ def render_application_lookup():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        search_term = st.text_input("Search by ID or Name")
+        search_term = st.text_input("Search by any field")
     
     with col2:
-        status_filter = st.selectbox("Status Filter", ["All", "approved", "rejected", "under_review"])
+        # Safe status filter
+        if 'status' in df.columns:
+            status_options = ["All"] + list(df['status'].unique())
+            status_filter = st.selectbox("Status Filter", status_options)
+        else:
+            status_filter = "All"
+            st.info("No status data available")
     
     with col3:
-        risk_threshold = st.slider("Risk Score Threshold", 0.0, 1.0, 0.5)
+        # Safe risk threshold
+        if 'risk_score' in df.columns:
+            risk_threshold = st.slider("Risk Score Threshold", 0.0, 1.0, 0.5)
+        else:
+            risk_threshold = 0.5
+            st.info("No risk score data available")
     
     # Filter data
     filtered_df = df.copy()
@@ -839,37 +710,47 @@ def render_application_lookup():
     if search_term:
         filtered_df = filtered_df[filtered_df.apply(lambda row: search_term.lower() in str(row).lower(), axis=1)]
     
-    if status_filter != "All":
+    if status_filter != "All" and 'status' in df.columns:
         filtered_df = filtered_df[filtered_df['status'] == status_filter]
     
-    filtered_df = filtered_df[filtered_df['risk_score'] >= risk_threshold]
+    if 'risk_score' in df.columns:
+        filtered_df = filtered_df[filtered_df['risk_score'] >= risk_threshold]
     
     # Display results
     st.subheader(f"Found {len(filtered_df)} Applications")
     
     if len(filtered_df) > 0:
-        # Select columns to display
-        display_columns = ['application_date', 'age', 'income', 'loan_amount', 'credit_score', 'risk_score', 'status']
-        display_df = filtered_df[display_columns].head(50)  # Limit display
+        # Select columns to display (only those that exist)
+        possible_columns = ['application_date', 'age', 'income', 'loan_amount', 'credit_score', 'risk_score', 'status']
+        display_columns = [col for col in possible_columns if col in filtered_df.columns]
         
-        st.dataframe(display_df, use_container_width=True)
-        
-        # Export options
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("📊 Export to CSV"):
+        if display_columns:
+            display_df = filtered_df[display_columns].head(50)
+            st.dataframe(display_df, use_container_width=True)
+            
+            # Export options
+            col1, col2 = st.columns(2)
+            with col1:
                 csv = display_df.to_csv(index=False)
                 st.download_button(
-                    label="Download CSV",
+                    label="📥 Download as CSV",
                     data=csv,
                     file_name="applications_export.csv",
                     mime="text/csv"
                 )
-        
-        with col2:
-            if st.button("📈 Show Statistics"):
-                st.subheader("Dataset Statistics")
-                st.write(filtered_df[['age', 'income', 'loan_amount', 'risk_score']].describe())
+            
+            with col2:
+                if st.button("📈 Show Statistics"):
+                    st.subheader("Dataset Statistics")
+                    numeric_cols = display_df.select_dtypes(include=[np.number]).columns
+                    if len(numeric_cols) > 0:
+                        st.write(display_df[numeric_cols].describe())
+                    else:
+                        st.info("No numeric columns for statistics")
+        else:
+            st.info("No columns available for display")
+    else:
+        st.info("No applications found matching the criteria")
 
 # =============================================================================
 # ANALYTICS COMPONENT
@@ -881,119 +762,159 @@ def render_analytics():
     
     df = st.session_state.kaggle_data
     
-    # Filters
+    # Safe filters
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        date_range = st.date_input(
-            "Date Range",
-            [df['application_date'].min(), df['application_date'].max()]
-        )
+        if 'application_date' in df.columns:
+            try:
+                min_date = df['application_date'].min()
+                max_date = df['application_date'].max()
+                date_range = st.date_input(
+                    "Date Range",
+                    [min_date, max_date]
+                )
+            except:
+                date_range = [datetime.now().date() - timedelta(days=30), datetime.now().date()]
+                st.info("Using default date range")
+        else:
+            date_range = [datetime.now().date() - timedelta(days=30), datetime.now().date()]
+            st.info("No date data - using default range")
     
     with col2:
-        loan_range = st.slider(
-            "Loan Amount Range",
-            float(df['loan_amount'].min()),
-            float(df['loan_amount'].max()),
-            (float(df['loan_amount'].min()), float(df['loan_amount'].max()))
-        )
+        if 'loan_amount' in df.columns:
+            loan_range = st.slider(
+                "Loan Amount Range",
+                float(df['loan_amount'].min()),
+                float(df['loan_amount'].max()),
+                (float(df['loan_amount'].min()), float(df['loan_amount'].max()))
+            )
+        else:
+            loan_range = (0, 100000)
+            st.info("No loan amount data")
     
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
     with col3:
-        age_range = st.slider(
-            "Age Range",
-            int(df['age'].min()),
-            int(df['age'].max()),
-            (int(df['age'].min()), int(df['age'].max()))
-        )
+        if 'age' in df.columns:
+            age_range = st.slider(
+                "Age Range",
+                int(df['age'].min()),
+                int(df['age'].max()),
+                (int(df['age'].min()), int(df['age'].max()))
+            )
+        else:
+            age_range = (18, 70)
+            st.info("No age data")
     
-    # Filter data
-    filtered_df = df[
-        (df['application_date'] >= pd.to_datetime(date_range[0])) &
-        (df['application_date'] <= pd.to_datetime(date_range[1])) &
-        (df['loan_amount'] >= loan_range[0]) &
-        (df['loan_amount'] <= loan_range[1]) &
-        (df['age'] >= age_range[0]) &
-        (df['age'] <= age_range[1])
-    ]
+    # Filter data safely
+    filtered_df = df.copy()
+    
+    if 'application_date' in df.columns:
+        try:
+            filtered_df = filtered_df[
+                (filtered_df['application_date'] >= pd.to_datetime(date_range[0])) &
+                (filtered_df['application_date'] <= pd.to_datetime(date_range[1]))
+            ]
+        except:
+            pass
+    
+    if 'loan_amount' in df.columns:
+        filtered_df = filtered_df[
+            (filtered_df['loan_amount'] >= loan_range[0]) &
+            (filtered_df['loan_amount'] <= loan_range[1])
+        ]
+    
+    if 'age' in df.columns:
+        filtered_df = filtered_df[
+            (filtered_df['age'] >= age_range[0]) &
+            (filtered_df['age'] <= age_range[1])
+        ]
     
     # Analytics Charts
-    tab1, tab2, tab3 = st.tabs(["Risk Analysis", "Demographic Insights", "Performance Metrics"])
+    tab1, tab2, tab3 = st.tabs(["📊 Risk Analysis", "👥 Demographic Insights", "📋 Performance Metrics"])
     
     with tab1:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("Fraud Distribution by Loan Purpose")
-            # This would be based on actual loan purpose data
-            fraud_data = pd.DataFrame({
-                'purpose': ['Home', 'Car', 'Business', 'Personal', 'Education'],
-                'fraud_rate': [0.05, 0.12, 0.18, 0.08, 0.03]
-            })
-            fig, ax = plt.subplots(figsize=(8, 6))
-            ax.bar(fraud_data['purpose'], fraud_data['fraud_rate'], color='lightcoral')
-            ax.set_ylabel('Fraud Rate')
-            ax.set_xlabel('Loan Purpose')
-            plt.xticks(rotation=45)
-            st.pyplot(fig)
+            st.subheader("Risk Distribution")
+            if 'risk_score' in filtered_df.columns:
+                fig, ax = plt.subplots(figsize=(8, 6))
+                ax.hist(filtered_df['risk_score'], bins=20, alpha=0.7, color='skyblue', edgecolor='black')
+                ax.set_xlabel('Risk Score')
+                ax.set_ylabel('Frequency')
+                ax.grid(True, alpha=0.3)
+                st.pyplot(fig)
+            else:
+                st.info("No risk score data available")
         
         with col2:
             st.subheader("Risk Correlation Heatmap")
-            numeric_cols = ['age', 'income', 'loan_amount', 'credit_score', 'risk_score']
-            corr_matrix = filtered_df[numeric_cols].corr()
-            fig, ax = plt.subplots(figsize=(8, 6))
-            sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', center=0, ax=ax)
-            st.pyplot(fig)
+            numeric_cols = filtered_df.select_dtypes(include=[np.number]).columns
+            if len(numeric_cols) > 1:
+                corr_matrix = filtered_df[numeric_cols].corr()
+                fig, ax = plt.subplots(figsize=(8, 6))
+                sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', center=0, ax=ax)
+                st.pyplot(fig)
+            else:
+                st.info("Not enough numeric columns for correlation analysis")
     
     with tab2:
         col1, col2 = st.columns(2)
         
         with col1:
-            st.subheader("Age Distribution by Status")
-            fig, ax = plt.subplots(figsize=(8, 6))
-            for status in filtered_df['status'].unique():
-                status_data = filtered_df[filtered_df['status'] == status]
-                ax.hist(status_data['age'], alpha=0.6, label=status, bins=15)
-            ax.legend()
-            ax.set_xlabel('Age')
-            ax.set_ylabel('Frequency')
-            st.pyplot(fig)
+            st.subheader("Age Distribution")
+            if 'age' in filtered_df.columns:
+                fig, ax = plt.subplots(figsize=(8, 6))
+                ax.hist(filtered_df['age'], bins=15, alpha=0.7, color='lightgreen', edgecolor='black')
+                ax.set_xlabel('Age')
+                ax.set_ylabel('Frequency')
+                ax.grid(True, alpha=0.3)
+                st.pyplot(fig)
+            else:
+                st.info("No age data available")
         
         with col2:
-            st.subheader("Income vs Loan Amount")
-            fig, ax = plt.subplots(figsize=(8, 6))
-            scatter = ax.scatter(filtered_df['income'], filtered_df['loan_amount'], 
-                               c=filtered_df['risk_score'], cmap='viridis', alpha=0.6)
-            ax.set_xlabel('Income')
-            ax.set_ylabel('Loan Amount')
-            plt.colorbar(scatter, label='Risk Score')
-            st.pyplot(fig)
+            st.subheader("Income Distribution")
+            if 'income' in filtered_df.columns:
+                fig, ax = plt.subplots(figsize=(8, 6))
+                ax.hist(filtered_df['income'], bins=20, alpha=0.7, color='gold', edgecolor='black')
+                ax.set_xlabel('Income')
+                ax.set_ylabel('Frequency')
+                ax.grid(True, alpha=0.3)
+                st.pyplot(fig)
+            else:
+                st.info("No income data available")
     
     with tab3:
-        st.subheader("Performance Metrics Over Time")
+        st.subheader("Application Trends")
         
-        # Monthly performance
-        monthly_perf = filtered_df.groupby(filtered_df['application_date'].dt.to_period('M')).agg({
-            'risk_score': 'mean',
-            'fraud_flag': 'mean',
-            'loan_amount': 'count'
-        }).reset_index()
+        if 'application_date' in filtered_df.columns:
+            try:
+                # Monthly performance
+                filtered_df['application_date'] = pd.to_datetime(filtered_df['application_date'])
+                monthly_perf = filtered_df.groupby(filtered_df['application_date'].dt.to_period('M')).agg({
+                    'application_date': 'count'
+                }).rename(columns={'application_date': 'count'}).reset_index()
+                
+                fig, ax = plt.subplots(figsize=(10, 6))
+                ax.plot(monthly_perf['application_date'].astype(str), monthly_perf['count'], marker='o', linewidth=2)
+                ax.set_ylabel('Number of Applications')
+                ax.set_xlabel('Month')
+                ax.grid(True, alpha=0.3)
+                ax.tick_params(axis='x', rotation=45)
+                st.pyplot(fig)
+            except Exception as e:
+                st.info("Could not generate trend chart")
+        else:
+            st.info("No date data for trend analysis")
         
-        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
-        
-        ax1.plot(monthly_perf['application_date'].astype(str), monthly_perf['risk_score'], marker='o')
-        ax1.set_ylabel('Average Risk Score')
-        ax1.grid(True, alpha=0.3)
-        ax1.tick_params(axis='x', rotation=45)
-        
-        ax2.bar(monthly_perf['application_date'].astype(str), monthly_perf['fraud_flag'] * 100)
-        ax2.set_ylabel('Fraud Rate (%)')
-        ax2.set_xlabel('Month')
-        ax2.grid(True, alpha=0.3)
-        ax2.tick_params(axis='x', rotation=45)
-        
-        plt.tight_layout()
-        st.pyplot(fig)
+        # Summary statistics
+        st.subheader("Summary Statistics")
+        numeric_cols = filtered_df.select_dtypes(include=[np.number]).columns
+        if len(numeric_cols) > 0:
+            st.dataframe(filtered_df[numeric_cols].describe(), use_container_width=True)
+        else:
+            st.info("No numeric data for statistics")
 
 # =============================================================================
 # LOGIN PAGE
@@ -1089,14 +1010,11 @@ def main():
             <div style='background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #ddd; text-align: center;'>
                 <p style='margin: 0; font-weight: bold;'>👤 {st.session_state.current_user}</p>
                 <p style='margin: 0; color: #666;'>{st.session_state.user_role.title()}</p>
-                <button onclick="window.location.href='?logout=true'" style='margin-top: 10px; padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;'>
-                    Logout
-                </button>
             </div>
         """, unsafe_allow_html=True)
         
         # Handle logout
-        if st.button("Logout", key="logout_btn"):
+        if st.button("🚪 Logout", key="logout_btn"):
             for key in list(st.session_state.keys()):
                 del st.session_state[key]
             st.rerun()
@@ -1224,8 +1142,4 @@ def main():
     """, unsafe_allow_html=True)
 
 if __name__ == "__main__":
-<<<<<<< HEAD
     main()
-=======
-    main()
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61

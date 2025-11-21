@@ -6,12 +6,3 @@ matplotlib
 seaborn
 joblib
 imbalanced-learn
-<<<<<<< HEAD
-plotly
-altair
-datetime
-hashlib
-io
-base64
-=======
->>>>>>> a2e671f52ab1ac158f6283dc19b09b4df41fca61
