@@ -6,9 +6,3 @@ matplotlib
 seaborn
 joblib
 imbalanced-learn
-plotly
-altair
-datetime
-hashlib
-io
-base64
