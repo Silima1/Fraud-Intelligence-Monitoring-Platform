@@ -14,6 +14,7 @@ import json
 # =============================================================================
 # SISTEMA DE AUTENTICAÇÃO
 # =============================================================================
+
 def initialize_auth():
     """Inicializa o sistema de autenticação"""
     if 'users' not in st.session_state:
@@ -61,14 +62,16 @@ def get_current_user_role():
 # =============================================================================
 # CONFIGURAÇÃO INICIAL
 # =============================================================================
+
 try:
     st.set_page_config(
         page_title="Fraud Intelligence Platform",
         layout="wide",
         page_icon="🛡️"
     )
+    
+    DEBUG_MODE = True
 
-    DEBUG_MODE = False
     if DEBUG_MODE:
         st.sidebar.write("## Environment Info")
         st.sidebar.write("Python: 3.12.1")
@@ -100,7 +103,7 @@ def create_demo_model():
         from sklearn.ensemble import RandomForestClassifier
         from sklearn.datasets import make_classification
         
-        X, y = make_classification(n_samples=1000, n_features=27, random_state=42)
+        X, y = make_classification(n_samples=1000, n_features=10, random_state=42)
         model = RandomForestClassifier(n_estimators=10, random_state=42)
         model.fit(X, y)
         return model
@@ -110,38 +113,20 @@ def create_demo_model():
 
 def create_demo_data():
     try:
-        # Criar dados demo com as 27 features esperadas
-        demo_features = [
-            'application_date', 'loan_amount_requested', 'loan_tenure_months', 'interest_rate_offered',
-            'purpose_of_loan', 'employment_status', 'monthly_income', 'cibil_score', 'existing_emis_monthly',
-            'debt_to_income_ratio', 'property_ownership_status', 'residential_address', 'applicant_age',
-            'number_of_dependents', 'loan_type_Car Loan', 'loan_type_Education Loan', 'loan_type_Home Loan',
-            'loan_type_Personal Loan', 'gender_Male', 'gender_Other', 'yearly_income', 'loan_amount_usd',
-            'credit_utilization_ratio', 'annual_bonus', 'app_year', 'app_month', 'app_dayofweek'
-        ]
-        
-        train_data = {}
-        for feature in demo_features:
-            if 'loan_type' in feature or 'gender' in feature:
-                train_data[feature] = np.random.choice([0, 1], 1000)
-            elif 'date' in feature:
-                train_data[feature] = pd.date_range('2020-01-01', periods=1000, freq='D')
-            else:
-                train_data[feature] = np.random.normal(0, 1, 1000)
-        
-        train_data['fraud_flag'] = np.random.choice([0, 1], 1000, p=[0.97, 0.03])
+        train_data = {
+            'feature_1': np.random.normal(0, 1, 1000),
+            'feature_2': np.random.normal(0, 1, 1000),
+            'feature_3': np.random.normal(0, 1, 1000),
+            'fraud_flag': np.random.choice([0, 1], 1000, p=[0.97, 0.03])
+        }
         train_df = pd.DataFrame(train_data)
         
-        test_data = {}
-        for feature in demo_features:
-            if feature == 'application_date':
-                test_data[feature] = pd.date_range('2023-01-01', periods=500, freq='D')
-            elif 'loan_type' in feature or 'gender' in feature:
-                test_data[feature] = np.random.choice([0, 1], 500)
-            else:
-                test_data[feature] = np.random.normal(0, 1, 500)
-        
-        test_data['application_id'] = [f"APP_{i:06d}" for i in range(500)]
+        test_data = {
+            'application_id': [f"APP_{i:06d}" for i in range(500)],
+            'feature_1': np.random.normal(0, 1, 500),
+            'feature_2': np.random.normal(0, 1, 500),
+            'feature_3': np.random.normal(0, 1, 500),
+        }
         test_df = pd.DataFrame(test_data)
         
         return train_df, test_df
@@ -170,7 +155,7 @@ def load_model():
         return create_demo_model()
         
     except Exception as e:
-        st.sidebar.error(f" Model loading error: {str(e)}")
+        st.sidebar.error(f"❌ Model loading error: {str(e)}")
         return create_demo_model()
 
 def load_data():
@@ -197,7 +182,7 @@ def load_data():
         return create_demo_data()
         
     except Exception as e:
-        st.sidebar.error(f" Data loading error: {str(e)}")
+        st.sidebar.error(f"❌ Data loading error: {str(e)}")
         return create_demo_data()
 
 def get_feature_columns(clf, train_df):
@@ -238,21 +223,13 @@ try:
         st.sidebar.info(f"📊 Training data: {len(train_df)} rows")
         st.sidebar.info(f"📈 Test data: {len(test_df_default)} rows") 
         st.sidebar.info(f"🎯 Features: {len(feature_cols)} columns")
-        st.sidebar.info(f"🔍 Feature names: {feature_cols}")
     
 except Exception as e:
     st.error(f"Error initializing application: {str(e)}")
     st.info("The app is running in demo mode with sample data.")
     clf = create_demo_model()
     train_df, test_df_default = create_demo_data()
-    feature_cols = [
-        'application_date', 'loan_amount_requested', 'loan_tenure_months', 'interest_rate_offered',
-        'purpose_of_loan', 'employment_status', 'monthly_income', 'cibil_score', 'existing_emis_monthly',
-        'debt_to_income_ratio', 'property_ownership_status', 'residential_address', 'applicant_age',
-        'number_of_dependents', 'loan_type_Car Loan', 'loan_type_Education Loan', 'loan_type_Home Loan',
-        'loan_type_Personal Loan', 'gender_Male', 'gender_Other', 'yearly_income', 'loan_amount_usd',
-        'credit_utilization_ratio', 'annual_bonus', 'app_year', 'app_month', 'app_dayofweek'
-    ]
+    feature_cols = ['feature_1', 'feature_2', 'feature_3']
 
 # =============================================================================
 # SISTEMA DE AVALIAÇÃO DE RISCO
@@ -366,7 +343,7 @@ def show_login_page():
         </div>
     """, unsafe_allow_html=True)
     
-    tab1, tab2 = st.tabs(["🔐 Login", "📝 Registar-se"])
+    tab1, tab2 = st.tabs(["🔐 Login", "📝 Registrar"])
     
     with tab1:
         st.subheader("Login na Plataforma")
@@ -434,9 +411,15 @@ def show_main_interface():
                 <div style='text-align: right; color: white;'>
                     <p style='margin: 0;'>👤 {st.session_state.current_user}</p>
                     <p style='margin: 0; font-size: 0.9em;'>🔧 {role_display}</p>
+                    <button onclick="logout()" style='margin-top: 5px; padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer;'>Sair</button>
                 </div>
             </div>
         </div>
+        <script>
+            function logout() {{
+                window.location.href = window.location.href;
+            }}
+        </script>
     """, unsafe_allow_html=True)
     
     # Botão de logout funcional
@@ -514,7 +497,7 @@ def show_main_interface():
                             <strong>Assessment System:</strong><br>
                             • ✅ NORMAL (Target 0): Transaction Approved<br>
                             • 🚨 RISCO (Target 1): Immediate Action Required<br>
-                            • 👤 New Target: Uses 50% probability threshold
+                            • Unknown Target: Uses 50% probability threshold
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -524,357 +507,92 @@ def show_main_interface():
             st.info("No application IDs available in the test dataset. Using demo mode.")
 
     # =============================================================================
-    # TAB 2: NEW APP (FORMULÁRIO CORRIGIDO - SEM DATAS)
+    # TAB 2: NEW APP (ANTIGO NEW VERIFICATION)
     # =============================================================================
 
     with tab2:
-        st.markdown("<h2 style='font-size: 1.5em;'>📋 New App - Application Risk Assessment</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='font-size: 1.5em;'>New App Verification</h2>", unsafe_allow_html=True)
         
-        # Informação sobre as features do modelo
-        if DEBUG_MODE:
-            with st.expander("🔍 Model Features Info"):
-                st.info(f"Model expects {len(feature_cols)} features")
-                st.write(feature_cols)
+        numeric_cols = [c for c in feature_cols if c in train_df.columns and pd.api.types.is_numeric_dtype(train_df[c])]
+        editable_cols = numeric_cols[:min(4, len(numeric_cols))]
         
-        st.markdown("### 🎯 Application Details")
-        
-        # Criar formulário baseado nas 27 features específicas
+        if not editable_cols:
+            editable_cols = ['feature_1', 'feature_2', 'feature_3']
+
         col1, col2 = st.columns(2)
         
-        user_values = {}
-        
         with col1:
-            st.markdown("#### 👤 Personal Information")
-            
-            application_id = st.text_input("Application ID", value=f"APP_{random.randint(100000, 999999)}")
-            customer_name = st.text_input("Customer Name", value="John Doe")
-            
-            # Informações pessoais
-            user_values['applicant_age'] = st.number_input("Applicant Age", min_value=18, max_value=100, value=35)
-            user_values['number_of_dependents'] = st.number_input("Number of Dependents", min_value=0, max_value=10, value=2)
-            
-            # Gênero (one-hot encoded)
-            gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-            user_values['gender_Male'] = 1 if gender == "Male" else 0
-            user_values['gender_Other'] = 1 if gender == "Other" else 0
-            
-            user_values['residential_address'] = st.number_input("Residential Address Score", min_value=1, max_value=10, value=7)
-            
-            # Status de propriedade (convertido para numérico)
-            property_ownership = st.selectbox("Property Ownership", ["Owned", "Mortgaged", "Rented"])
-            property_mapping = {"Owned": 2, "Mortgaged": 1, "Rented": 0}
-            user_values['property_ownership_status'] = property_mapping[property_ownership]
-            
+            st.markdown("<h4 style='font-size: 1.1em;'>App Details</h4>", unsafe_allow_html=True)
+            user_values = {}
+            for col in editable_cols:
+                default = 0.0
+                if col in train_df.columns:
+                    default = float(train_df[col].iloc[0]) if len(train_df) > 0 else 0.0
+                step = 1.0 if isinstance(default, int) else 0.01
+                user_values[col] = st.number_input(
+                    f"{col}", 
+                    value=default, 
+                    step=step
+                )
+
         with col2:
-            st.markdown("#### 💰 Loan Information")
+            st.markdown("<h4 style='font-size: 1.1em;'>Verification Settings</h4>", unsafe_allow_html=True)
             
-            # Informações do empréstimo
-            user_values['loan_amount_requested'] = st.number_input("Loan Amount Requested ($)", min_value=1000, value=25000, step=1000)
-            user_values['loan_amount_usd'] = st.number_input("Loan Amount (USD)", min_value=1000, value=25000, step=1000)
-            user_values['loan_tenure_months'] = st.number_input("Loan Tenure (Months)", min_value=6, max_value=120, value=36)
-            user_values['interest_rate_offered'] = st.number_input("Interest Rate (%)", min_value=1.0, max_value=30.0, value=7.5, step=0.1)
+            st.markdown("<h4 style='font-size: 1.1em;'>Additional Information</h4>", unsafe_allow_html=True)
+            transaction_type = st.selectbox("Transaction Type", ["Credit Card", "Wire Transfer", "Cash Deposit", "Online Payment"])
+            amount = st.number_input("Amount ($)", min_value=0.0, value=1000.0, step=100.0)
             
-            # Tipo de empréstimo (one-hot encoded)
-            loan_type = st.selectbox("Loan Type", ["Personal Loan", "Home Loan", "Car Loan", "Education Loan"])
-            user_values['loan_type_Personal Loan'] = 1 if loan_type == "Personal Loan" else 0
-            user_values['loan_type_Home Loan'] = 1 if loan_type == "Home Loan" else 0
-            user_values['loan_type_Car Loan'] = 1 if loan_type == "Car Loan" else 0
-            user_values['loan_type_Education Loan'] = 1 if loan_type == "Education Loan" else 0
+            simulated_target = st.selectbox("Simulated Target (for testing):", [None, 0, 1], 
+                                           format_func=lambda x: "Unknown" if x is None else f"{x} ({'Normal' if x == 0 else 'Risco'})")
             
-            # Propósito do empréstimo (convertido para hash numérico)
-            loan_purpose = st.text_input("Loan Purpose", value="Home Renovation")
-            user_values['purpose_of_loan'] = hash(loan_purpose) % 1000  # Hash para valor numérico
-            
-        col3, col4 = st.columns(2)
-        
-        with col3:
-            st.markdown("#### 📊 Financial Information")
-            
-            # Informações de renda
-            user_values['monthly_income'] = st.number_input("Monthly Income ($)", min_value=0, value=5000, step=100)
-            user_values['yearly_income'] = st.number_input("Yearly Income ($)", min_value=0, value=60000, step=1000)
-            user_values['annual_bonus'] = st.number_input("Annual Bonus ($)", min_value=0, value=5000, step=100)
-            
-            # Score e histórico creditício
-            user_values['cibil_score'] = st.slider("CIBIL Score", 300, 900, 750)
-            user_values['credit_utilization_ratio'] = st.slider("Credit Utilization Ratio (%)", 0.0, 100.0, 35.0, step=0.1)
-            user_values['debt_to_income_ratio'] = st.slider("Debt-to-Income Ratio (%)", 0.0, 100.0, 25.0, step=0.1)
-            user_values['existing_emis_monthly'] = st.number_input("Existing EMIs Monthly ($)", min_value=0, value=500, step=50)
-            
-        with col4:
-            st.markdown("#### 🏢 Employment Information")
-            
-            # Status de emprego (convertido para numérico)
-            employment_status = st.selectbox("Employment Status", ["Employed", "Self-Employed", "Unemployed", "Retired"])
-            employment_mapping = {"Employed": 3, "Self-Employed": 2, "Retired": 1, "Unemployed": 0}
-            user_values['employment_status'] = employment_mapping[employment_status]
-            
-            # Data da aplicação (convertida para features numéricas)
-            application_date = st.date_input("Application Date", value=datetime.now())
-            # Extrair features da data como números
-            user_values['app_year'] = application_date.year
-            user_values['app_month'] = application_date.month
-            user_values['app_dayofweek'] = application_date.weekday()
-            
-            # Para application_date, usar timestamp numérico
-            user_values['application_date'] = application_date.toordinal()
-        
-        # Configuração de teste
-        st.markdown("### ⚙️ Verification Settings")
-        simulated_target = st.selectbox("Simulated Outcome (for testing):", [None, 0, 1], 
-                                       format_func=lambda x: "Unknown" if x is None else f"{x} ({'Normal' if x == 0 else 'Risco'})")
-        
-        # Botão de submissão
-        if st.button("🚀 Analyze Application Risk", type="primary", use_container_width=True):
-            with st.spinner("🔍 Analyzing application data..."):
-                try:
-                    # Criar DataFrame com as 27 features exatas que o modelo espera
-                    input_data = {}
+            if st.button("Verify App", type="primary", use_container_width=True):
+                with st.spinner("Processing app..."):
+                    if len(train_df) > 0:
+                        sample_df = train_df[feature_cols].iloc[[0]].copy()
+                    else:
+                        sample_data = {col: 0.0 for col in feature_cols}
+                        sample_df = pd.DataFrame([sample_data])
                     
-                    # Preencher todas as 27 features com valores numéricos
-                    for feature in feature_cols:
-                        if feature in user_values:
-                            # Garantir que todos os valores são numéricos
-                            value = user_values[feature]
-                            if isinstance(value, (int, float)):
-                                input_data[feature] = [float(value)]
-                            else:
-                                # Converter para float se possível
-                                try:
-                                    input_data[feature] = [float(value)]
-                                except:
-                                    input_data[feature] = [0.0]
-                        else:
-                            # Para features não preenchidas, usar valor padrão baseado no tipo
-                            if 'loan_type' in feature or 'gender' in feature:
-                                input_data[feature] = [0.0]  # One-hot features default to 0
-                            else:
-                                input_data[feature] = [0.0]  # Numéricas default to 0.0
+                    for col, val in user_values.items():
+                        if col in sample_df.columns:
+                            sample_df[col] = val
+
+                    try:
+                        aligned = sample_df.reindex(columns=feature_cols, fill_value=0)
+                        proba = clf.predict_proba(aligned)[:, 1][0]
+                    except Exception:
+                        proba = random.uniform(0, 1)
                     
-                    # Criar DataFrame com a ordem correta das features
-                    sample_df = pd.DataFrame(input_data, columns=feature_cols)
-                    
-                    # Garantir que temos exatamente as 27 features que o modelo espera
-                    aligned = sample_df[feature_cols]
-                    
-                    # Verificar se temos o número correto de features
-                    if aligned.shape[1] != len(feature_cols):
-                        st.error(f"Feature mismatch: Expected {len(feature_cols)} features, got {aligned.shape[1]}")
-                        return
-                    
-                    # Verificar se todos os valores são numéricos
-                    if not all(pd.api.types.is_numeric_dtype(aligned[col]) for col in aligned.columns):
-                        st.error("Non-numeric values detected in features")
-                        return
-                    
-                    # Fazer a predição
-                    proba = clf.predict_proba(aligned)[:, 1][0]
-                    
-                    # Obter avaliação de risco
                     risk_level, color, recommendation, risk_category = get_risk_assessment_binary(proba, simulated_target)
                     
-                    # =============================================================================
-                    # RELATÓRIO COMPLETO DO CLIENTE
-                    # =============================================================================
-                    
-                    st.markdown("---")
-                    st.markdown(f"## 📊 Risk Assessment Report - {application_id}")
-                    
-                    # Header do resultado
+                    target_info = ""
+                    if simulated_target is not None:
+                        target_info = f" | Simulated Target: {simulated_target}"
+
                     st.markdown(
                         f"""
-                        <div style='padding:20px; background:{color}; color:white; border-radius:10px; text-align: center; margin-bottom: 20px;'>
-                            <h2 style='font-size: 1.8em; margin: 0;'>{risk_level}</h2>
-                            <p style='font-size: 1.2em; margin: 10px 0;'>Fraud Probability: {proba*100:.2f}%</p>
-                            <p style='font-size: 1em; margin: 0;'>{recommendation}</p>
+                        <div style='padding:15px; background:{color}; color:white; border-radius:10px; text-align: center;'>
+                            <h3 style='font-size: 1.2em; margin: 0;'>{risk_level}</h3>
+                            <p style='font-size: 1em; margin: 5px 0;'>Probability: {proba*100:.2f}%{target_info}</p>
+                            <p style='font-size: 0.9em; margin: 0;'>{recommendation}</p>
                         </div>
                         """,
                         unsafe_allow_html=True,
                     )
+
+                    fig, ax = plt.subplots(figsize=(6, 2))
                     
-                    # Barra de progresso visual
-                    st.markdown(f"""
-                        <div style='margin: 20px 0;'>
-                            <div style='background: #e0e0e0; border-radius: 10px; height: 25px; position: relative;'>
-                                <div style='background: {color}; width: {proba*100}%; border-radius: 10px; height: 25px; text-align: center; color: white; font-weight: bold; font-size: 0.9em; line-height: 25px;'>
-                                    {proba*100:.1f}% Risk Probability
-                                </div>
-                            </div>
-                        </div>
-                    """, unsafe_allow_html=True)
+                    threshold = 50
+                    ax.axvspan(0, threshold, alpha=0.3, color='#10B981', label='Normal Zone')
+                    ax.axvspan(threshold, 100, alpha=0.3, color='#DC2626', label='Risco Zone')
                     
-                    # Detalhes da aplicação
-                    st.markdown("### 📋 Application Summary")
-                    
-                    summary_col1, summary_col2 = st.columns(2)
-                    
-                    with summary_col1:
-                        st.metric("Application ID", application_id)
-                        st.metric("Customer Name", customer_name)
-                        st.metric("Applicant Age", f"{user_values['applicant_age']} years")
-                        st.metric("CIBIL Score", f"{user_values['cibil_score']}")
-                        st.metric("Monthly Income", f"${user_values['monthly_income']:,}")
-                        
-                    with summary_col2:
-                        st.metric("Loan Amount", f"${user_values['loan_amount_requested']:,}")
-                        st.metric("Loan Type", loan_type)
-                        st.metric("Risk Probability", f"{proba*100:.2f}%")
-                        st.metric("Risk Category", risk_level.replace("✅", "").replace("🚨", "").strip())
-                        st.metric("Debt-to-Income Ratio", f"{user_values['debt_to_income_ratio']}%")
-                    
-                    # Valores das principais features
-                    st.markdown("### 🔍 Key Input Features")
-                    
-                    key_features = {
-                        'Loan Amount': f"${user_values['loan_amount_requested']:,}",
-                        'CIBIL Score': user_values['cibil_score'],
-                        'Monthly Income': f"${user_values['monthly_income']:,}",
-                        'Debt-to-Income Ratio': f"{user_values['debt_to_income_ratio']}%",
-                        'Credit Utilization': f"{user_values['credit_utilization_ratio']}%",
-                        'Applicant Age': user_values['applicant_age'],
-                        'Employment Status': employment_status,
-                        'Loan Tenure': f"{user_values['loan_tenure_months']} months",
-                        'Property Ownership': property_ownership
-                    }
-                    
-                    key_df = pd.DataFrame(list(key_features.items()), columns=['Feature', 'Value'])
-                    st.dataframe(key_df, use_container_width=True, hide_index=True)
-                    
-                    # Análise de fatores de risco
-                    st.markdown("### 🎯 Risk Analysis")
-                    
-                    risk_factors = []
-                    
-                    # Analisar fatores de risco baseados nos inputs
-                    if user_values['cibil_score'] < 650:
-                        risk_factors.append({
-                            "Factor": "Low CIBIL Score",
-                            "Risk Level": "High",
-                            "Impact": "Significant impact on approval chances"
-                        })
-                    
-                    if user_values['debt_to_income_ratio'] > 40:
-                        risk_factors.append({
-                            "Factor": "High Debt-to-Income Ratio",
-                            "Risk Level": "High", 
-                            "Impact": "May struggle with additional debt payments"
-                        })
-                    
-                    if user_values['credit_utilization_ratio'] > 50:
-                        risk_factors.append({
-                            "Factor": "High Credit Utilization",
-                            "Risk Level": "Medium",
-                            "Impact": "Indicates heavy reliance on credit"
-                        })
-                    
-                    if user_values['applicant_age'] < 25:
-                        risk_factors.append({
-                            "Factor": "Young Applicant Age",
-                            "Risk Level": "Low",
-                            "Impact": "Limited credit history"
-                        })
-                    
-                    if employment_status == "Unemployed":
-                        risk_factors.append({
-                            "Factor": "Unemployment Status",
-                            "Risk Level": "High",
-                            "Impact": "No stable income source"
-                        })
-                    
-                    risk_factors.append({
-                        "Factor": "Overall Risk Probability",
-                        "Risk Level": "High" if proba > 0.7 else "Medium" if proba > 0.3 else "Low",
-                        "Impact": f"{proba*100:.2f}% probability of risk"
-                    })
-                    
-                    if risk_factors:
-                        risk_df = pd.DataFrame(risk_factors)
-                        st.dataframe(risk_df, use_container_width=True, hide_index=True)
-                    
-                    # Recomendações específicas
-                    st.markdown("### 💡 Recommendations & Next Steps")
-                    
-                    if risk_category == "normal":
-                        st.success(f"""
-                        ✅ **APPLICATION APPROVAL RECOMMENDED**
-                        
-                        **Next Steps for {customer_name}:**
-                        - Proceed with standard verification process
-                        - Review documentation for completeness
-                        - Approve {loan_type} application of ${user_values['loan_amount_requested']:,} with {user_values['interest_rate_offered']}% interest
-                        - Monitor account for first 6 months as per policy
-                        - Risk probability: {proba*100:.2f}% (Below threshold)
-                        """)
-                    else:
-                        st.error(f"""
-                        🚨 **APPLICATION REQUIRES MANUAL REVIEW**
-                        
-                        **Required Actions for {customer_name}:**
-                        - Escalate to senior risk analyst immediately
-                        - Request additional documentation and income verification
-                        - Verify employment status and residential address
-                        - Consider higher interest rate ({user_values['interest_rate_offered'] + 2}%) or additional collateral
-                        - Possible application decline due to {proba*100:.2f}% risk probability
-                        - Schedule follow-up review within 24 hours
-                        """)
-                    
-                    # Detalhes técnicos para administradores
-                    if get_current_user_role() in ["admin", "gestor"]:
-                        with st.expander("🔧 Technical Details (Admin View)"):
-                            st.markdown("**Model Information:**")
-                            st.write(f"- Model type: {type(clf).__name__}")
-                            st.write(f"- Number of features: {len(feature_cols)}")
-                            st.write(f"- Features used: {len(feature_cols)}")
-                            
-                            st.markdown("**Input Data Verification:**")
-                            st.write(f"- Input shape: {aligned.shape}")
-                            st.write(f"- Features expected: {len(feature_cols)}")
-                            st.write(f"- Features provided: {aligned.shape[1]}")
-                            st.write(f"- All features numeric: {all(pd.api.types.is_numeric_dtype(aligned[col]) for col in aligned.columns)}")
-                            
-                            st.markdown("**Prediction Confidence:**")
-                            col_conf1, col_conf2 = st.columns(2)
-                            with col_conf1:
-                                st.metric("Probability of Normal", f"{(1-proba)*100:.2f}%")
-                            with col_conf2:
-                                st.metric("Probability of Risk", f"{proba*100:.2f}%")
-                    
-                    # Botão de download do relatório
-                    report_data = {
-                        'application_id': application_id,
-                        'customer_name': customer_name,
-                        'risk_level': risk_level,
-                        'risk_probability': f"{proba*100:.2f}%",
-                        'recommendation': recommendation,
-                        'applicant_age': user_values['applicant_age'],
-                        'cibil_score': user_values['cibil_score'],
-                        'loan_amount': user_values['loan_amount_requested'],
-                        'loan_type': loan_type,
-                        'employment_status': employment_status,
-                        'monthly_income': user_values['monthly_income'],
-                        'debt_to_income_ratio': user_values['debt_to_income_ratio'],
-                        'decision': 'APPROVED' if risk_category == "normal" else 'REVIEW REQUIRED',
-                        'timestamp': datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        'analyst': st.session_state.current_user
-                    }
-                    
-                    report_df = pd.DataFrame([report_data])
-                    csv_report = report_df.to_csv(index=False)
-                    
-                    st.download_button(
-                        label="📥 Download Risk Assessment Report",
-                        data=csv_report,
-                        file_name=f"risk_assessment_{application_id}.csv",
-                        mime="text/csv",
-                        use_container_width=True
-                    )
-                    
-                except Exception as e:
-                    st.error(f" Error processing application: {str(e)}")
-                    if DEBUG_MODE:
-                        st.error(f"Detailed error: {traceback.format_exc()}")
-                        st.info(f"Feature columns expected: {feature_cols}")
-                        st.info(f"Number of features expected: {len(feature_cols)}")
+                    ax.barh([0], [proba * 100], color=color, height=0.3)
+                    ax.set_xlim(0, 100)
+                    ax.set_xlabel('Risco Probability (%)', fontsize=8)
+                    ax.legend(fontsize=6, loc='upper center')
+                    ax.set_facecolor('#f8f9fa')
+                    ax.tick_params(axis='both', which='major', labelsize=6)
+                    st.pyplot(fig)
 
     # =============================================================================
     # TAB 3: PROBABILITY DISTRIBUTION (MANTIDO IGUAL)
@@ -963,7 +681,7 @@ def show_main_interface():
                 with col4:
                     st.metric("Risk Rate", f"{(y_pred.sum()/len(y_pred)*100):.1f}%")
 
-                    # Gráfico de distribuição
+                    # Gráfico de distribuição - VERSÃO CORRIGIDA
                     fig, ax = plt.subplots(figsize=(6, 2))
                     counts = [len(y_pred) - y_pred.sum(), y_pred.sum()]
                     labels = ['Low Risk', 'High Risk'] 
